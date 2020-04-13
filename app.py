@@ -1,7 +1,13 @@
 # app.py
 from flask import Flask, request, jsonify
-app = Flask(__name__)
+import os
+import psycopg2
 
+app = Flask(__name__)
+DATABASE_URL = os.environ['postgres://cftcizripqjxwe:aa568fb875a82c5983b6cd118ca7b40c5c23c2d5aaafbb118b0429325245eddb@ec2-34-206-252-187.compute-1.amazonaws.com:5432/defffttcs8evre']
+
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+print(conn)
 @app.route('/getmsg/', methods=['GET'])
 def respond():
     # Retrieve the name from url parameter
