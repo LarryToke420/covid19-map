@@ -1,56 +1,43 @@
-# app.py
-from flask import Flask, request, jsonify
-import os
-import psycopg2
+from flask import Flask, render_template
+import folium
+import requests
+import pandas as pd
+import json
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
-DATABASE_URL = os.environ['postgres://cftcizripqjxwe:aa568fb875a82c5983b6cd118ca7b40c5c23c2d5aaafbb118b0429325245eddb@ec2-34-206-252-187.compute-1.amazonaws.com:5432/defffttcs8evre']
 
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-print(conn)
-@app.route('/getmsg/', methods=['GET'])
-def respond():
-    # Retrieve the name from url parameter
-    name = request.args.get("name", None)
-
-    # For debugging
-    print(f"got name {name}")
-
-    response = {}
-
-    # Check if user sent a name at all
-    if not name:
-        response["ERROR"] = "no name found, please send a name."
-    # Check if the user entered a number not a name
-    elif str(name).isdigit():
-        response["ERROR"] = "name can't be numeric."
-    # Now the user entered a valid name
-    else:
-        response["MESSAGE"] = f"Welcome {name} to our awesome platform!!"
-
-    # Return the response in json format
-    return jsonify(response)
-
-@app.route('/post/', methods=['POST'])
-def post_something():
-    param = request.form.get('name')
-    print(param)
-    # You can add the test cases you made in the previous function, but in our case here you are just testing the POST functionality
-    if param:
-        return jsonify({
-            "Message": f"Welcome {param} to our awesome platform!!",
-            # Add this option to distinct the POST request
-            "METHOD" : "POST"
-        })
-    else:
-        return jsonify({
-            "ERROR": "no name found, please send a name."
-        })
-
-# A welcome message to test our server
 @app.route('/')
 def index():
-    return "<h1>Welcome to our server !!</h1>"
+    text = requests.get('https://covid2019-api.herokuapp.com/v2/current')
+    new_text = text.json()
+    new_text = pd.DataFrame.from_dict(new_text['data'])
+    print(new_text)
+    world_geo = r'countries.geojson'
+    world_map = folium.Map(location=[4.68, 8.33],
+                        tiles='Mapbox Bright', zoom_start=3)
+    world_map = folium.Choropleth(
+        geo_data=world_geo,
+        name='choropleth',
+        data=new_text,
+        columns=['location','confirmed'],
+        key_on='properties.ADMIN',
+        threshold_scale = [0,1000,5000,130000,580619],
+        fill_color='BuPu',
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name='Number of deaths per country',
+        highlight=True,
+        line_color='black'
+        ).add_to(world_map)
+
+    folium.LayerControl().add_to(world_map)
+    world_map.save('templates/map.html')
+    return render_template('index.html')
+
+@app.route('/map')
+def map():
+    return render_template('map.html')
 
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support
