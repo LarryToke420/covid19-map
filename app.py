@@ -34,8 +34,8 @@ def index():
         ).add_to(world_map)
 
     folium.LayerControl().add_to(world_map)
-    world_map.save("index.html")
-    render_template("index.html")
+    world_map.save('templates/map.html')
+    return render_template('index.html')
 
 @app.route('/map')
 def map():
