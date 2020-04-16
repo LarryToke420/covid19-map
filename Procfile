@@ -1,2 +1,2 @@
 web: gunicorn app:app
-worker: python script.py
+worker: python map_builder.py
