@@ -15,6 +15,10 @@ def index():
     covid_data_max = covid_data['confirmed'].max()
     covid_data_max = covid_data_max.item()
 
+    covid_data.at['location','US'] = 'USA'
+    print(covid_data['location']['USA'])
+
+
     world_geo = r'countries.geojson'
     world_map = folium.Map(location=[4.68, 8.33],
                         tiles='Mapbox Bright', zoom_start=3)
